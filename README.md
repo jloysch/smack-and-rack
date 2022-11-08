@@ -1,4 +1,4 @@
 # SMACK and RACK
-(Session Management and Account Control Kit, Resource Access Control Kit)
+(Session Management and Constraints Kit, Resource Access Control Kit)
 
-Simple permissions management in Java
+Simple framework for user and group permissions management in Java.
