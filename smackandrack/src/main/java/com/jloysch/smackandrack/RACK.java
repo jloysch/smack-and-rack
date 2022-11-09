@@ -849,7 +849,6 @@ public class RACK {
 	}
 	
 	public String rerollUunameIfNotUnique(String uuname) {
-		
 		if (isUniqueUuname(uuname)) {
 			return uuname;
 		} else {
@@ -864,7 +863,6 @@ public class RACK {
 	}
 	
 	public String rerollgUunameIfNotUnique(String guuname) { //TODO REROLL
-		
 		if (this.groupTree.isUniquegUuname(guuname)) {
 			System.out.println("'" + guuname +"' is unique.");
 			return guuname;
@@ -906,7 +904,6 @@ public class RACK {
 	}
 	
 	public LinkedList <String> getAllPermissionsForGroup(int guuid) {
-		
 		LinkedList <String> returnValues = new LinkedList <String> ();
 		
 		for (Entry <String, Boolean> permission : this.groupLevelPermissions.get(guuid).entrySet()) {
@@ -928,10 +925,7 @@ public class RACK {
 	}
 	
 	public LinkedList <String> getAllPermissionsForUser(int uuid) {
-		
 		LinkedList <String> returnValues = new LinkedList <String> ();
-		
-		
 		
 		for (Entry <String, Boolean> entry : locateUser(uuid).directAccess.entrySet()) {
 			String permissionKey = entry.getKey();
@@ -958,7 +952,6 @@ public class RACK {
 	}
 	
 	public LinkedList <String> getAllPermissionsForAccessLevel(int accessLevel) {
-		
 		LinkedList <String> returnValues = new LinkedList <String> ();
 		
 		for (Entry <Integer, HashMap <String, Boolean>> entry : this.accessLevelPermissions.entrySet()) {
@@ -1036,8 +1029,6 @@ public class RACK {
 	}
 	
 	public void printAccessRightsToPermission(String uuname, String permission) {
-		
-		
 		System.out.print("\nAccess rights for {" + uuname + "(" + this.locateUser(uuname).getUuid() + "), Group={'" + this.locateGroup(this.locateUser(uuname).guuid) + "(" + this.locateGroup(this.locateUser(uuname).guuid).getUuid()  + ")}} to '" + permission + "' > \n[");
 		for (int i : hasPermissionVia(this.locateUser(uuname).getUuid(), permission)) {
 			System.out.print(i + " (");
@@ -1058,19 +1049,12 @@ public class RACK {
 			System.out.print("), ");
 		}
 		
-		System.out.print("] (" +  hasPermissionVia(this.locateUser(uuname).getUuid(), permission).size() +")\n");
+		System.out.print("] (" + hasPermissionVia(this.locateUser(uuname).getUuid(), permission).size() + ")\n");
 	}
 	
 	public void print() {
-		
 		System.out.println("\n--[Users]--\n");
-		
-		for (User u : this.users) {
-			System.out.println(">> " + u + "\n-");
-			System.out.println("GROUP> " + this.groupTree.getGroupNameFor(u.guuid) + "\nAXSLVL> " + this.groupTree.getAccessLevelFor(u.guuid) + "\nGUUNAME> " + (this.groupTree.locateGroup(u.guuid) == null ? "NULL" : this.groupTree.locateGroup(u.guuid).guuname) + "\n-\n");
-			
-		}
-		
+		for (User u : this.users) { System.out.println(u); }
 		System.out.println("-- -- --\n");
 	}
 	

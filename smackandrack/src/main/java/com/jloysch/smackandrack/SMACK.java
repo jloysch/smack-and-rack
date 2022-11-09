@@ -1,5 +1,6 @@
 package com.jloysch.smackandrack;
 
+import java.io.File;
 import java.io.IOException;
 import java.io.UnsupportedEncodingException;
 import java.net.NetworkInterface;
@@ -21,6 +22,8 @@ public class SMACK {
 	//DEPENDS RACK
 
 	private final String PERMISSION_FORCE_LOGOUT = "smack.forcelogout";
+
+	public final static Path smackFilePath = Paths.get(System.getProperty("user.home") + File.separator + "smack.mfst");
 	
 	private SecretKey SECRET_KEY;
 	
@@ -66,6 +69,9 @@ public class SMACK {
 		
 	}
 
+	public User createUser(String username) {
+		return this.getRACKInstance().createUser(username);
+	}
 	
 	public void grantForceLogoutToUser(User u) {
 		this.resourceAccessControlKit.grantToUser(u.getUuid(), this.PERMISSION_FORCE_LOGOUT);
@@ -105,9 +111,12 @@ public class SMACK {
 				}
 				
 				if (this.passwordHashes.get(u.getUuname()).equals(byteCryptToString(encrypt(password)))) {
-					System.out.println("User '" + u.getUuname() + " (" + u.getFriendlyName() + ")' logged in successfully.");
+
+					System.out.println("\nUser '" + u.getUuname() + " (" + u.getFriendlyName() + ")' logged in successfully.\n");
+
 					this.userSessions.add(u);
 					return u;
+
 				} else {
 					System.out.println("Incorrect combination for '" + uuname + "'");
 					return null;
@@ -288,32 +297,47 @@ public class SMACK {
 		return ret;
 	}
 	
-	public static Path smackFilePath = Paths.get("/Users/joshualoysch/Desktop/smack.mfst");
+
 	
-	public static void saveSmackAndRackInstanceToFile(SMACK smack) {
-		
+public static void saveSmackAndRackInstanceToFile(SMACK smack) {
 
-    // Custom string as an input
-   
-  // System.out.println("\nBEFORE SAVE >\n\n"  + "\n");
-   
-    // Try block to check for exceptions
-    try {
-        // Now calling Files.writeString() method
-        // with path , content & standard charsets
-    	Files.delete(smackFilePath);
-        Files.writeString(smackFilePath, smack.generateSmackAndRackInstanceString(),
-                          StandardCharsets.UTF_8);
-    }
 
-    // Catch block to handle the exception
-    catch (IOException ex) {
-        // Print messqage exception occurred as
-        // invalid. directory local path is passed
-        System.out.print("Invalid Path");
-    }
-    
+	// Custom string as an input
+
+	// System.out.println("\nBEFORE SAVE >\n\n"  + "\n");
+
+	// Try block to check for exceptions
+
+	try {
+		// Now calling Files.writeString() method
+		// with path , content & standard charsets
+		//Files.delete(smackFilePath);
+		Files.createFile(smackFilePath);
+		Files.writeString(smackFilePath, smack.generateSmackAndRackInstanceString(),
+				StandardCharsets.UTF_8);
 	}
+
+	// Catch block to handle the exception
+	catch (IOException ex) {
+		// Print messqage exception occurred as
+		// invalid. directory local path is passed
+		/* 
+		System.out.print("Unable to create manifest. Please check permissions.");
+		
+		*/
+
+		
+		try { 
+			Files.delete(smackFilePath);
+			Files.createFile(smackFilePath);
+			Files.writeString(smackFilePath, smack.generateSmackAndRackInstanceString(),
+					StandardCharsets.UTF_8);
+		} catch (Exception e) {
+			System.out.println("Unable to save manifest." + e);
+		}
+
+	}
+}
 	
 	public static SMACK buildFromInstanceFile() {
 		String dataResult = "";
@@ -332,13 +356,18 @@ public class SMACK {
 		    catch (IOException ex) {
 		        // Print messqage exception occurred as
 		        // invalid. directory local path is passed
-		        System.out.print("Invalid Path");
+		        System.out.println("SMACK > unable to read file from path\n");
+				return null;
 		    }
 		 
 		
 		 
 		 String[] byLine = (dataResult.split("\n"));
 		 
+		 if (byLine.length == 0) {
+			System.out.println("\nManifest empty, returning new SMACK > '" + SMACK.smackFilePath  + "'");
+			return new SMACK();
+		 }
 
 		 
 		 /*
@@ -366,6 +395,7 @@ public class SMACK {
 			 System.out.println(entry.getKey() + "|" + entry.getValue());
 		 }
 		*/
+
 		 /*
 		  * | User Info / Details (friendly name, etc)
 		  */
@@ -379,12 +409,14 @@ public class SMACK {
 			 userDetails = s.split("~");
 			 //System.out.println("User details > " + s);
 			// System.out.println("\nUDETAILLINE > " + s + "\n");
-			 newSmack.resourceAccessControlKit.createUserExplicit(userDetails[0], userDetails[1], Integer.parseInt(userDetails[2]), Integer.parseInt(userDetails[3]));
-			 //System.out.println(u);
-			 
-			 
+
+			if (s != null) {
+				//System.out.println("[" + userDetails[0] + "," + userDetails[1] + "," + userDetails[2] + "," + userDetails[3] + "]");
+				newSmack.resourceAccessControlKit.createUserExplicit(userDetails[0], userDetails[1], Integer.parseInt(userDetails[2]), Integer.parseInt(userDetails[3]));
+				//System.out.println("Created " + userDetails[0]);
+			}
 		 }
-		 
+
 		
 		  /*
 		   * | Group Info
@@ -400,9 +432,12 @@ public class SMACK {
 				  System.out.println("\t" + se);
 			  }
 			  */
-			 // System.out.println("Group details > " + s);
-			  newSmack.resourceAccessControlKit.createGroupExplicit(Integer.parseInt(thisUser[0]), thisUser[1], thisUser[2], Integer.parseInt(thisUser[3]));
-			 
+			  try {
+				System.out.println("Group details > " + s);
+				newSmack.resourceAccessControlKit.createGroupExplicit(Integer.parseInt(thisUser[0]), thisUser[1], thisUser[2], Integer.parseInt(thisUser[3]));
+			  } catch (Exception e) {
+				//System.out.println("Unable to parse line '" + s + "'");
+			  }
 			  //newSmack.resourceAccessControlKit.printHierarchy();
 			 
 		  
@@ -419,7 +454,7 @@ public class SMACK {
 			  thisGroup = s.split("~");
 			  
 			  
-			  
+			try {
 			  for (int i = 1; i < thisGroup.length-1; i++) {
 				  if (thisGroup[i+1].equals("true")) newSmack.resourceAccessControlKit.grantToGroup(Integer.parseInt(thisGroup[0]), thisGroup[i]);
 			  }
@@ -427,6 +462,9 @@ public class SMACK {
 			  if (thisGroup.length==1) { //TODO Check if I want to keep doing this. Just putting null keys so we see that it's picked up by the read again.
 				  newSmack.resourceAccessControlKit.grantToGroup(Integer.parseInt(thisGroup[0]), null);
 			  }
+			} catch (Exception e) {
+				//System.out.println("Unable to parse '" + s + "'");
+			}
 			  
 		  }
 		  
@@ -439,13 +477,17 @@ public class SMACK {
 		  for (String s : byLine[4].split(" ")) {
 			  thisAccessLevel = s.split("~");
 			  
-			  for (int i = 1; i < thisAccessLevel.length-1; i++) {
-				  if (thisAccessLevel[i+1].equals("true")) newSmack.resourceAccessControlKit.grantToAccessLevel(Integer.parseInt(thisAccessLevel[0]), thisAccessLevel[i]);
-			  }
-			  
-			  if (thisAccessLevel.length==1) {
-				  newSmack.resourceAccessControlKit.grantToAccessLevel(Integer.parseInt(thisAccessLevel[0]), null);
-			  }
+			  try {
+				for (int i = 1; i < thisAccessLevel.length-1; i++) {
+					if (thisAccessLevel[i+1].equals("true")) newSmack.resourceAccessControlKit.grantToAccessLevel(Integer.parseInt(thisAccessLevel[0]), thisAccessLevel[i]);
+				}
+				
+				if (thisAccessLevel.length==1) {
+					newSmack.resourceAccessControlKit.grantToAccessLevel(Integer.parseInt(thisAccessLevel[0]), null);
+				}
+			} catch (Exception e) {
+				//System.out.println("Unable to parse '" + s + "'");
+			}
 		  }
 		  
 		  /*
@@ -458,18 +500,21 @@ public class SMACK {
 			  thisUsersDirectPermissions = s.split("~");
 
 			 //int uuid = Integer.parseInt(thisUsersDirectPermissions[0]);
-			  
-			  for (int i = 1; i < thisUsersDirectPermissions.length-1; i++) {
-				 // System.out.println(thisUsersDirectPermissions[i]);
-				  
-				  if (thisUsersDirectPermissions[i+1].equals("true")) {
-					  
+			  try { 
+				for (int i = 1; i < thisUsersDirectPermissions.length-1; i++) {
+					// System.out.println(thisUsersDirectPermissions[i]);
 					
-					  newSmack.resourceAccessControlKit.grantToUser(Integer.parseInt(thisUsersDirectPermissions[0]), thisUsersDirectPermissions[i]);
-					 
-					 
-				  }
-			  }
+					if (thisUsersDirectPermissions[i+1].equals("true")) {
+						
+						
+						newSmack.resourceAccessControlKit.grantToUser(Integer.parseInt(thisUsersDirectPermissions[0]), thisUsersDirectPermissions[i]);
+						
+						
+					}
+				}
+			} catch (Exception e ) {
+				System.out.println("Unable to parse '" + s + "'");
+			}
 			  
 			  if (thisUsersDirectPermissions.length==1) {
 				  //this.resourceAccessControlKit.grantToUser(Integer.valueOf(thisUsersDirectPermissions[0]), null);
@@ -493,6 +538,10 @@ public class SMACK {
 	
 	public void printUsers() {
 		for (User u : this.userStore) System.out.println(u);
+	}
+
+	public static void save(SMACK smack) {
+		SMACK.saveSmackAndRackInstanceToFile(smack);
 	}
 	
 }
